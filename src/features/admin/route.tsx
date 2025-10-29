@@ -3,15 +3,32 @@ import { PrecipitationPage } from "@/features/admin/pages/precipitation.page";
 import { DashboardProfilePage } from "@/features/admin/pages/profile.page";
 import { RiveLevelPage } from "@/features/admin/pages/rive-level.page";
 import { TropicalCyclonePage } from "@/features/admin/pages/tropical-cyclone.page";
-import { createRoute } from "@tanstack/react-router";
+import { createRoute, redirect } from "@tanstack/react-router";
 import { rootRoute } from "../../app/router";
-// import { requireAuth } from "@/lib/auth-guard";
+import { requireAuth } from "@/lib/auth-guard";
+import { useAuthStore } from "@/features/auth/store";
 
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "admin",
   component: AdminLayout,
-  // beforeLoad: requireAuth,
+  beforeLoad: (opts) => {
+    requireAuth();
+    const { user } = useAuthStore.getState();
+
+    if (!user) {
+      throw redirect({
+        to: "/login",
+        search: {
+          redirect: window.location.pathname + window.location.search,
+        },
+      });
+    }
+
+    if (opts.location.pathname === "/admin" || opts.location.pathname === "/admin/") {
+      throw redirect({ to: "/admin/tropical-cyclone" });
+    }
+  },
 });
 
 const profileRoute = createRoute({

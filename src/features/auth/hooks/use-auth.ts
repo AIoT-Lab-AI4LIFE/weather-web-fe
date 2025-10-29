@@ -42,9 +42,9 @@ export function useAuth() {
       const { token } = await fn();
       localStorage.setItem(LS_KEY_ACCESS_TOKEN, token);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      queryClient.refetchQueries({ queryKey: ["profile"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.refetchQueries({ queryKey: ["profile"] });
     },
   });
 
