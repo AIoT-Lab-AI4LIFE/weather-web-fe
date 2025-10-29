@@ -6,6 +6,7 @@ import { TropicalCyclonePage } from "@/features/admin/pages/tropical-cyclone.pag
 import { createRoute, redirect } from "@tanstack/react-router";
 import { rootRoute } from "../../app/router";
 import { requireAuth } from "@/lib/auth-guard";
+import { useAuthStore } from "@/features/auth/store";
 
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -13,8 +14,19 @@ const adminRoute = createRoute({
   component: AdminLayout,
   beforeLoad: (opts) => {
     requireAuth();
-    if (opts.location.pathname === '/admin' || opts.location.pathname === '/admin/') {
-      throw redirect({ to: '/admin/tropical-cyclone' });
+    const { user } = useAuthStore.getState();
+
+    if (!user) {
+      throw redirect({
+        to: "/login",
+        search: {
+          redirect: window.location.pathname + window.location.search,
+        },
+      });
+    }
+
+    if (opts.location.pathname === "/admin" || opts.location.pathname === "/admin/") {
+      throw redirect({ to: "/admin/tropical-cyclone" });
     }
   },
 });
