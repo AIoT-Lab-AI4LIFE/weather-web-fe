@@ -50,16 +50,47 @@ export const stormsApi = {
     list: (params?: PaginationParams & { storm_id?: number }) =>
       apiService.get<PaginatedResult<BestTrackFileRead>>("/storms/besttrack-files/", { params }),
 
-    create: async (data: BestTrackFileUpload) => {
+    create: async (data: BestTrackFileUpload, onProgress?: (progress: number) => void) => {
+      if (!data.file) {
+        throw new Error("File is required");
+      }
+
+      onProgress?.(1);
+
       const formattedDate = new Date(data.issued_time).toISOString().slice(0, 13).replace(/[-T:]/g, "").replace("Z", "");
-      await storageApi.upload({
-        file: data.file!,
-        path: `storms/${data.storm_id}/besttrack/${formattedDate}`,
+
+      // Get presigned URL
+      const { uploadUrl, key } = await storageApi.presign.storms({
+        filename: data.file.name,
+        content_type: data.file.type,
         storm_id: data.storm_id,
         issued_date: formattedDate,
-        data_type: "besttrack",
+        data_type: "BESTTRACK",
       });
+
+      onProgress?.(5);
+
+      // Upload to S3
+      await storageApi.uploadToS3(uploadUrl, data.file, (percent) => {
+        const mappedPercent = 5 + (percent * 0.9);
+        onProgress?.(mappedPercent);
+      });
+
+      onProgress?.(95);
+
+      // Commit to server
+      const result = await storageApi.commit.storms({
+        key,
+        storm_id: data.storm_id,
+        issued_date: formattedDate,
+        data_type: "BESTTRACK",
+      });
+
+      onProgress?.(100);
+
+      return result;
     },
+
     update: (fileId: string, data: BestTrackFileUpdate) =>
       apiService.put<BestTrackFileRead>(`/storms/besttrack-files/${fileId}`, data),
 
@@ -72,16 +103,40 @@ export const stormsApi = {
     list: (params?: PaginationParams & { storm_id?: number }) =>
       apiService.get<PaginatedResult<NWPDataRead>>("/storms/nwp-data/", { params }),
 
-    create: async (data: NWPDataCreate & { file?: File }) => {
+    create: async (data: NWPDataCreate & { file?: File }, onProgress?: (progress: number) => void) => {
       if (data.file) {
+        onProgress?.(1);
         const formattedDate = new Date(data.issued_time).toISOString().slice(0, 13).replace(/[-T:]/g, "").replace("Z", "");
-        await storageApi.upload({
-          file: data.file,
-          path: `storms/${data.storm_id}/nwp/${formattedDate}`,
+
+        // Get presigned URL
+        const { uploadUrl, key } = await storageApi.presign.storms({
+          filename: data.file.name,
+          content_type: data.file.type,
           storm_id: data.storm_id,
           issued_date: formattedDate,
-          data_type: "nwp",
+          data_type: "NWP",
         });
+        onProgress?.(5);
+
+        // Upload to S3
+        await storageApi.uploadToS3(uploadUrl, data.file, (percent) => {
+          const mappedPercent = 5 + (percent * 0.9);
+          onProgress?.(mappedPercent);
+        });
+
+        onProgress?.(95);
+
+        // Commit to server
+        const result = await storageApi.commit.storms({
+          key,
+          storm_id: data.storm_id,
+          issued_date: formattedDate,
+          data_type: "NWP",
+        });
+
+        onProgress?.(100);
+
+        return result;
       }
       else {
         return apiService.post<NWPDataRead>("/storms/nwp-data/", data);
@@ -100,16 +155,40 @@ export const stormsApi = {
     list: (params?: PaginationParams & { storm_id?: number }) =>
       apiService.get<PaginatedResult<HRESDataRead>>("/storms/hres-data/", { params }),
 
-    create: async (data: HRESDataCreate & { file?: File }) => {
+    create: async (data: HRESDataCreate & { file?: File }, onProgress?: (progress: number) => void) => {
       if (data.file) {
         const formattedDate = new Date(data.issued_time).toISOString().slice(0, 13).replace(/[-T:]/g, "").replace("Z", "");
-        await storageApi.upload({
-          file: data.file,
-          path: `storms/${data.storm_id}/hres/${formattedDate}`,
+
+        onProgress?.(1);
+
+        // Get presigned URL
+        const { uploadUrl, key } = await storageApi.presign.storms({
+          filename: data.file.name,
+          content_type: data.file.type,
           storm_id: data.storm_id,
           issued_date: formattedDate,
-          data_type: "hres",
+          data_type: "HRES",
         });
+
+        onProgress?.(5);
+
+        // Upload to S3
+        await storageApi.uploadToS3(uploadUrl, data.file, (percent) => {
+          const mappedPercent = 5 + (percent * 0.9);
+          onProgress?.(mappedPercent);
+        });
+
+        // Commit to server
+        const result = await storageApi.commit.storms({
+          key,
+          storm_id: data.storm_id,
+          issued_date: formattedDate,
+          data_type: "HRES",
+        });
+
+        onProgress?.(100);
+
+        return result;
       }
       else {
         return apiService.post<HRESDataRead>("/storms/hres-data/", data);
