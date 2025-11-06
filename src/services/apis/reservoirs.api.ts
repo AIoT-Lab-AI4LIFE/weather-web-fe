@@ -61,18 +61,32 @@ export const reservoirsApi = {
     list: (params?: PaginationParams & { reservoir_id?: number; data_type?: string; start_date?: string; end_date?: string }) =>
       apiService.get<ReservoirOperationFilePagination>("/reservoirs/reservoir-operation-files/", { params }),
 
-    create: async (data: ReservoirOperationFileUpload) => {
+    create: async (data: ReservoirOperationFileUpload, onProgress?: (progress: number) => void) => {
       if (data.file) {
-        const formattedFromTime = new Date(data.from_time).toISOString().slice(0, 13).replace(/[-T:]/g, "").replace("Z", "");
-        const formattedToTime = new Date(data.to_time).toISOString().slice(0, 13).replace(/[-T:]/g, "").replace("Z", "");
-        await storageApi.upload({
-          file: data.file,
-          path: `reservoirs/${data.reservoir_id}/operations/${formattedFromTime}_${formattedToTime}`,
-          reservoir_id: data.reservoir_id,
-          from_time: data.from_time,
-          to_time: data.to_time,
-          data_type: "reservoir-operation",
+        onProgress?.(1);
+
+        // Get presigned URL
+        const { uploadUrl, key } = await storageApi.presign.reservoirs({
+          filename: data.file.name,
+          content_type: data.file.type,
         });
+
+        onProgress?.(5);
+
+        // Upload to S3
+        await storageApi.uploadToS3(uploadUrl, data.file, (percent) => {
+          const mappedPercent = 5 + (percent * 0.9);
+          onProgress?.(mappedPercent);
+        });
+
+        onProgress?.(95);
+
+        // Commit to server
+        const result = await storageApi.commit.reservoirs({ key });
+
+        onProgress?.(100);
+
+        return result;
       }
       else {
         return apiService.post<ReservoirOperationFileRead>("/reservoirs/reservoir-operation-files/", data);
