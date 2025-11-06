@@ -19,7 +19,7 @@ function FileUpload({
   onChange,
   onFileNameChange,
   acceptedFileTypes = "*/*",
-  maxFileSize = 100,
+  maxFileSize = 10000, // 10 GB default
   showFileName = true,
   currentFileName,
   disabled,

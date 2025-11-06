@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
+import { Progress } from "antd";
 import { ReactNode } from "react";
 import { FieldValues, UseFormReturn } from "react-hook-form";
 
@@ -22,6 +23,7 @@ interface FormModalProps<T extends FieldValues> {
   submitLabel?: string;
   cancelLabel?: string;
   isLoading?: boolean;
+  uploadProgress?: number;
 }
 
 export function FormModal<T extends FieldValues>({
@@ -35,6 +37,7 @@ export function FormModal<T extends FieldValues>({
   submitLabel = "Save",
   cancelLabel = "Cancel",
   isLoading = false,
+  uploadProgress = 0,
 }: FormModalProps<T>) {
   const handleSubmit = async (data: T) => {
     try {
@@ -52,6 +55,8 @@ export function FormModal<T extends FieldValues>({
     onOpenChange(false);
   };
 
+  const showProgress = isLoading && uploadProgress > 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -62,6 +67,21 @@ export function FormModal<T extends FieldValues>({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             {children}
+            {showProgress && (
+              <div className="py-2">
+                <Progress
+                  percent={Math.round(uploadProgress)}
+                  status={uploadProgress === 100 ? "success" : "active"}
+                  strokeColor={{
+                    "0%": "#108ee9",
+                    "100%": "#87d068",
+                  }}
+                />
+                <p className="text-sm text-gray-500 mt-2 text-center">
+                  Uploading file...
+                </p>
+              </div>
+            )}
             <DialogFooter>
               <Button
                 type="button"
