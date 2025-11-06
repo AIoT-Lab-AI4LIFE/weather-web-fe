@@ -14,19 +14,14 @@ import {
   ReservoirOperationFileUpload,
 } from "@/types/reservoirs";
 import { storageApi } from "./storage.api";
-
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-}
+import { paginationAdapter, PaginationParams } from "@/lib/pagination";
 
 // Reservoirs API Functions
 export const reservoirsApi = {
   // Reservoirs
   reservoirs: {
     list: (params?: PaginationParams & { status?: string; location?: string }) =>
-      apiService.get<ReservoirPagination>("/reservoirs/reservoirs/", { params }),
+      apiService.get<ReservoirPagination>("/reservoirs/reservoirs/", { params: paginationAdapter(params) }),
 
     create: (data: ReservoirCreate) =>
       apiService.post<ReservoirRead>("/reservoirs/reservoirs/", data),
@@ -44,7 +39,7 @@ export const reservoirsApi = {
   // Reservoir Operations
   operations: {
     list: (params?: PaginationParams & { reservoir_id?: number; start_date?: string; end_date?: string }) =>
-      apiService.get<ReservoirOperationPagination>("/reservoirs/reservoir-operations/", { params }),
+      apiService.get<ReservoirOperationPagination>("/reservoirs/reservoir-operations/", { params: paginationAdapter(params) }),
 
     create: (data: ReservoirOperationCreate) =>
       apiService.post<ReservoirOperationRead>("/reservoirs/reservoir-operations/", data),
@@ -59,7 +54,7 @@ export const reservoirsApi = {
   // Reservoir Operation Files
   operationFiles: {
     list: (params?: PaginationParams & { reservoir_id?: number; data_type?: string; start_date?: string; end_date?: string }) =>
-      apiService.get<ReservoirOperationFilePagination>("/reservoirs/reservoir-operation-files/", { params }),
+      apiService.get<ReservoirOperationFilePagination>("/reservoirs/reservoir-operation-files/", { params: paginationAdapter(params) }),
 
     create: async (data: ReservoirOperationFileUpload, onProgress?: (progress: number) => void) => {
       if (data.file) {

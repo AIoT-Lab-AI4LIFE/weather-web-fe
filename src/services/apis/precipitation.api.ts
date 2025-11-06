@@ -1,32 +1,14 @@
+import { paginationAdapter, PaginationParams } from "@/lib/pagination";
 import { apiService } from "@/services/api.service";
-import {
-  StationCreate,
-  StationRead,
-  StationUpdate,
-  StationPagination,
-  RainfallRecordCreate,
-  RainfallRecordRead,
-  RainfallRecordUpdate,
-  RainfallRecordPagination,
-  S2SFileRead,
-  S2SFileUpdate,
-  S2SFilePagination,
-  S2SFileUpload,
-} from "@/types/precipitation";
+import { RainfallRecordCreate, RainfallRecordPagination, RainfallRecordRead, RainfallRecordUpdate, S2SFilePagination, S2SFileRead, S2SFileUpdate, S2SFileUpload, StationCreate, StationPagination, StationRead, StationUpdate } from "@/types/precipitation";
 import { storageApi } from "./storage.api";
-
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-}
 
 // Station API Functions
 export const precipitationApi = {
   // Stations
   stations: {
     list: (params?: PaginationParams) =>
-      apiService.get<StationPagination>("/precipitation/stations/", { params }),
+      apiService.get<StationPagination>("/precipitation/stations/", { params: paginationAdapter(params) }),
 
     create: (data: StationCreate) =>
       apiService.post<StationRead>("/precipitation/stations/", data),
@@ -44,7 +26,7 @@ export const precipitationApi = {
   // Rainfall Records
   rainfallRecords: {
     list: (params?: PaginationParams & { station_id?: number; start_date?: string; end_date?: string }) =>
-      apiService.get<RainfallRecordPagination>("/precipitation/rainfall-records/", { params }),
+      apiService.get<RainfallRecordPagination>("/precipitation/rainfall-records/", { params: paginationAdapter(params) }),
 
     create: (data: RainfallRecordCreate) =>
       apiService.post<RainfallRecordRead>("/precipitation/rainfall-records/", data),
@@ -59,7 +41,7 @@ export const precipitationApi = {
   // S2S Files
   s2sFiles: {
     list: (params?: PaginationParams & { data_type?: string; start_date?: string; end_date?: string }) =>
-      apiService.get<S2SFilePagination>("/precipitation/s2s-files/", { params }),
+      apiService.get<S2SFilePagination>("/precipitation/s2s-files/", { params: paginationAdapter(params) }),
 
     create: async (data: S2SFileUpload, onProgress?: (progress: number) => void) => {
       if (data.file) {

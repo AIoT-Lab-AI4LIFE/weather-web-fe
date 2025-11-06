@@ -18,19 +18,14 @@ import {
   StormUpdate,
 } from "@/types/storms";
 import { storageApi } from "./storage.api";
-
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-}
+import { paginationAdapter, PaginationParams } from "@/lib/pagination";
 
 // Storms API Functions
 export const stormsApi = {
   // Storms
   storms: {
     list: (params?: PaginationParams) =>
-      apiService.get<PaginatedResult<StormRead>>("/storms/storms/", { params }),
+      apiService.get<PaginatedResult<StormRead>>("/storms/storms/", { params: paginationAdapter(params) }),
 
     create: (data: StormCreate) =>
       apiService.post<StormRead>("/storms/storms/", data),
@@ -101,7 +96,7 @@ export const stormsApi = {
   // NWP Data
   nwpData: {
     list: (params?: PaginationParams & { storm_id?: number }) =>
-      apiService.get<PaginatedResult<NWPDataRead>>("/storms/nwp-data/", { params }),
+      apiService.get<PaginatedResult<NWPDataRead>>("/storms/nwp-data/", { params: paginationAdapter(params) }),
 
     create: async (data: NWPDataCreate & { file?: File }, onProgress?: (progress: number) => void) => {
       if (data.file) {
@@ -153,7 +148,7 @@ export const stormsApi = {
   // HRES Data
   hresData: {
     list: (params?: PaginationParams & { storm_id?: number }) =>
-      apiService.get<PaginatedResult<HRESDataRead>>("/storms/hres-data/", { params }),
+      apiService.get<PaginatedResult<HRESDataRead>>("/storms/hres-data/", { params: paginationAdapter(params) }),
 
     create: async (data: HRESDataCreate & { file?: File }, onProgress?: (progress: number) => void) => {
       if (data.file) {
@@ -204,7 +199,7 @@ export const stormsApi = {
 
   stormLifecycle: {
     list: (params?: PaginationParams & { storm_ids?: number[]; start_date?: string; end_date?: string }) =>
-      apiService.get<PaginatedResult<StormLifecycleRead>>("/storms/storm-lifecycle/", { params }),
+      apiService.get<PaginatedResult<StormLifecycleRead>>("/storms/storm-lifecycle/", { params: paginationAdapter(params) }),
 
     create: (data: StormLifecycleCreate) =>
       apiService.post<StormLifecycleRead>("/storms/storm-lifecycle/", data),
