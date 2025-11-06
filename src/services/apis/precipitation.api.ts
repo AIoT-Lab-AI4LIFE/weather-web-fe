@@ -61,16 +61,38 @@ export const precipitationApi = {
     list: (params?: PaginationParams & { data_type?: string; start_date?: string; end_date?: string }) =>
       apiService.get<S2SFilePagination>("/precipitation/s2s-files/", { params }),
 
-    create: async (data: S2SFileUpload) => {
+    create: async (data: S2SFileUpload, onProgress?: (progress: number) => void) => {
       if (data.file) {
         const formattedAddedTime = data.added_time ? new Date(data.added_time).toISOString().slice(0, 13).replace(/[-T:]/g, "").replace("Z", "") : new Date().toISOString().slice(0, 13).replace(/[-T:]/g, "").replace("Z", "");
-        await storageApi.upload({
-          file: data.file,
+
+        onProgress?.(1);
+
+        // Use generic presign with path
+        const { uploadUrl, key } = await storageApi.presign.generic({
+          filename: data.file.name,
+          content_type: data.file.type,
           path: `precipitation/s2s/${data.s2s_id}/${formattedAddedTime}`,
-          s2s_id: data.s2s_id,
-          added_time: data.added_time || new Date().toISOString(),
-          data_type: "s2s",
         });
+
+        onProgress?.(5);
+
+        // Upload to S3
+        await storageApi.uploadToS3(uploadUrl, data.file, (percent) => {
+          const mappedPercent = 5 + (percent * 0.9);
+          onProgress?.(mappedPercent);
+        });
+
+        // For precipitation, we still use the legacy endpoint as there's no commit endpoint
+        // We just let the server know about the upload
+        const result = await apiService.post<S2SFileRead>("/precipitation/s2s-files/", {
+          s2s_id: data.s2s_id,
+          file_path: key,
+          added_time: data.added_time || new Date().toISOString(),
+        });
+
+        onProgress?.(100);
+
+        return result;
       }
       else {
         return apiService.post<S2SFileRead>("/precipitation/s2s-files/", data);
