@@ -19,3 +19,25 @@ export interface StorageUploadResponse {
     id: number;
   };
 }
+
+export interface PresignRequest {
+  filename: string;
+  content_type: string;
+  path?: string;
+  storm_id?: number;
+  reservoir_id?: number;
+  issued_date?: string;
+  data_type?: string;
+}
+
+export interface PresignResponse {
+  uploadUrl: string;
+  key: string;
+}
+
+export interface CommitUploadResponse {
+  key: string;
+  meta?: any;
+  items?: any[];
+}
+

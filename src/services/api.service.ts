@@ -6,9 +6,6 @@ import { PaginatedResult } from "@/types/interfaces/pagination";
 
 const axiosInstance = axios.create({
   baseURL: env.VITE_APP_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
   paramsSerializer: {
     indexes: null, // This will serialize arrays as: storm_ids=1&storm_ids=2
   },
