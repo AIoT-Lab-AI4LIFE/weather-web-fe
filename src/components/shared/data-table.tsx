@@ -204,20 +204,63 @@ export function DataTable<T>({
                   className={tableState.page === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              {Array.from({ length: data.totalPages }).map((_, i) => (
-                <PaginationItem key={i}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onTableStateChange({ page: i + 1 });
-                    }}
-                    isActive={tableState.page === i + 1}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {(() => {
+                const currentPage = tableState.page;
+                const totalPages = data.totalPages;
+                const maxVisiblePages = 5; // Show current page ±2
+                const pages: (number | string)[] = [];
+
+                if (totalPages <= maxVisiblePages + 2) {
+                  // Show all pages if total is small
+                  for (let i = 1; i <= totalPages; i++) {
+                    pages.push(i);
+                  }
+                }
+                else {
+                  // Always show first page
+                  pages.push(1);
+
+                  // Show pages around current page (±2)
+                  const start = Math.max(2, currentPage - 2);
+                  const end = Math.min(totalPages - 1, currentPage + 2);
+
+                  if (start > 2) {
+                    pages.push("...");
+                  }
+
+                  for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                  }
+
+                  if (end < totalPages - 1) {
+                    pages.push("...");
+                  }
+
+                  // Always show last page
+                  pages.push(totalPages);
+                }
+
+                return pages.map((page, i) => (
+                  <PaginationItem key={i}>
+                    {typeof page === "number"
+                      ? (
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onTableStateChange({ page });
+                            }}
+                            isActive={tableState.page === page}
+                          >
+                            {page}
+                          </PaginationLink>
+                        )
+                      : (
+                          <span className="px-3 py-2">...</span>
+                        )}
+                  </PaginationItem>
+                ));
+              })()}
               <PaginationItem>
                 <PaginationNext
                   href="#"

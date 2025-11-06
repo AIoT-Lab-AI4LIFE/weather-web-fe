@@ -52,7 +52,7 @@ export function useCrudTable<TRead, TCreate = TRead, TUpdate = Partial<TCreate>>
       setModalOpen(false);
       setUploadProgress(0);
     },
-    onError: error => {
+    onError: (error) => {
       handleApiError(error, { customMessage: `Failed to create ${entityName}` });
       setUploadProgress(0);
     },
