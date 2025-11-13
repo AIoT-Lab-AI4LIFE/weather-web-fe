@@ -16,15 +16,10 @@ export function SearchInput() {
   } = useWeatherMapStore();
 
   const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim())
-      return;
+    if (!searchQuery.trim()) return;
 
     setIsSearching(true);
     try {
-      // TODO: Implement actual search API call
-      // For now, this is a placeholder
-
-      // Mock search results - replace with actual API call
       const mockResults = [
         {
           id: 1,
@@ -37,29 +32,31 @@ export function SearchInput() {
 
       setSearchResults(mockResults);
 
-      // Auto-select first result and update map
       if (mockResults.length > 0) {
         const firstResult = mockResults[0];
         setSelectedStation(firstResult);
         setMapCenter([firstResult.lat, firstResult.lng]);
         setMapZoom(10);
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Search error:", error);
       setSearchResults([]);
-    }
-    finally {
+    } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, setIsSearching, setSearchResults, setSelectedStation, setMapCenter, setMapZoom]);
+  }, [
+    searchQuery,
+    setIsSearching,
+    setSearchResults,
+    setSelectedStation,
+    setMapCenter,
+    setMapZoom,
+  ]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
 
-    // TODO: Implement debounced search logic here
-    // For now, just clear results when query is empty
     if (!value.trim()) {
       setSearchResults([]);
     }
@@ -72,7 +69,7 @@ export function SearchInput() {
   };
 
   return (
-    <div className="flex items-center w-[448px] h-12 px-4 bg-white rounded-full shadow-md">
+    <div className="flex items-center w-full md:w-[448px] h-12 px-4 bg-white rounded-full shadow-md">
       <Icon
         path={isSearching ? mdiLoading : mdiMagnify}
         size={1}

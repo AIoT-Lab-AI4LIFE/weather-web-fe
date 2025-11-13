@@ -53,6 +53,9 @@ interface WeatherMapLayoutState {
   setSelectedStormId: (stormId: number | null) => void;
   isStormSelectorOpen: boolean;
   setIsStormSelectorOpen: (open: boolean) => void;
+
+  isMobileSidebarOpen: boolean; //  state for mobile sidebar
+  setIsMobileSidebarOpen: (isOpen: boolean) => void; //  action
 }
 
 export const useWeatherMapStore = create<WeatherMapLayoutState>()(
@@ -106,6 +109,9 @@ export const useWeatherMapStore = create<WeatherMapLayoutState>()(
       setSelectedStormId: stormId => set({ selectedStormId: stormId }),
       isStormSelectorOpen: false,
       setIsStormSelectorOpen: open => set({ isStormSelectorOpen: open }),
+      
+      isMobileSidebarOpen: false,
+      setIsMobileSidebarOpen: (isOpen) => set({ isMobileSidebarOpen: isOpen }),
     }),
     { name: "WeatherMapStore" },
   ),

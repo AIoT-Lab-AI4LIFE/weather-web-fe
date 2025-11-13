@@ -40,7 +40,7 @@ export function TimelineControl() {
   };
 
   return (
-    <div className="flex items-center justify-center gap-4 px-4 h-20 w-full">
+    <div className="flex items-center justify-center gap-1 px-4 md:gap-4 md:px-4 h-20 w-full">
       <CircleButton onClick={handlePreviousDay}>
         <Icon path={mdiSkipPrevious} size={1} className="text-black" />
       </CircleButton>
@@ -100,6 +100,7 @@ export function TimelineControl() {
           disabled={sliderDisabled}
         />
       </ConfigProvider>
+      
       <CircleButton onClick={handleNextDay}>
         <Icon path={mdiSkipNext} size={1} className="text-black" />
       </CircleButton>
