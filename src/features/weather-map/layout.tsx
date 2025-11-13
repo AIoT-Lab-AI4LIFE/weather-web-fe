@@ -51,9 +51,13 @@ function WeatherMapLayoutContent() {
 
       <div
         className={`
-          absolute bottom-4 left-0 z-20 transition-all duration-500 ease-in-out
-          ${selectedStation ? "right-[476px]" : "right-0"}
-        `}
+    absolute bottom-4 z-20 transition-all duration-500 ease-in-out
+
+    left-1/2 -translate-x-1/2 w-full max-w-xl px-2
+
+    md:left-0 md:w-auto md:translate-x-0 md:px-0 md:max-w-none 
+    ${selectedStation ? "md:right-[476px]" : "md:right-0"}
+  `}
       >
         <TimelineControl />
       </div>

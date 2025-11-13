@@ -12,35 +12,36 @@ import { ChartData, LevelData, StationInfo } from "../types";
 import { useWeatherMapStore } from "../store";
 
 export function LevelPage() {
-  const { selectedStation, setSelectedStation, selectedDate, selectedHour, setSliderMarks } = useWeatherMapStore();
+  const {
+    selectedStation,
+    setSelectedStation,
+    selectedDate,
+    selectedHour,
+    setSliderMarks,
+  } = useWeatherMapStore();
   const [stations, setStations] = useState<StationInfo[]>([]);
   const [levelData, setLevelData] = useState<LevelData[]>([]);
-  const [reservoirOperations, setReservoirOperations] = useState<Map<number, ReservoirOperationRead[]>>(() => new Map());
+  const [reservoirOperations, setReservoirOperations] = useState<
+    Map<number, ReservoirOperationRead[]>
+  >(() => new Map());
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   // Color scale for water level (m)
   const getWaterLevelColor = (waterLevel: number): string => {
-    if (waterLevel === 0)
-      return "#E5E7EB"; // Gray for no data
-    if (waterLevel <= 50)
-      return "#DBEAFE"; // Very light blue - low water level
-    if (waterLevel <= 100)
-      return "#93C5FD"; // Light blue
-    if (waterLevel <= 150)
-      return "#3B82F6"; // Blue
-    if (waterLevel <= 200)
-      return "#1D4ED8"; // Dark blue
-    if (waterLevel <= 250)
-      return "#F59E0B"; // Orange - high water level
+    if (waterLevel === 0) return "#E5E7EB"; // Gray for no data
+    if (waterLevel <= 50) return "#DBEAFE"; // Very light blue - low water level
+    if (waterLevel <= 100) return "#93C5FD"; // Light blue
+    if (waterLevel <= 150) return "#3B82F6"; // Blue
+    if (waterLevel <= 200) return "#1D4ED8"; // Dark blue
+    if (waterLevel <= 250) return "#F59E0B"; // Orange - high water level
     return "#EF4444"; // Red - very high water level
   };
 
   // Extract water level for specific hour from daily operations
   const getWaterLevelForHour = (reservoirId: number, hour: number): number => {
     const operations = reservoirOperations.get(reservoirId);
-    if (!operations || !selectedDate)
-      return 0;
+    if (!operations || !selectedDate) return 0;
 
     const targetDateTime = new Date(selectedDate);
     targetDateTime.setHours(hour, 0, 0, 0);
@@ -48,7 +49,9 @@ export function LevelPage() {
     // Find the operation record closest to the target hour
     const matchingOperation = operations.find((operation) => {
       const operationTime = new Date(operation.timestamp);
-      const timeDiff = Math.abs(operationTime.getTime() - targetDateTime.getTime());
+      const timeDiff = Math.abs(
+        operationTime.getTime() - targetDateTime.getTime()
+      );
       return timeDiff <= 60 * 60 * 1000; // Within 1 hour
     });
 
@@ -56,30 +59,40 @@ export function LevelPage() {
   };
 
   // Transform API reservoir data to StationInfo format
-  const transformReservoirData = (apiReservoirs: ReservoirRead[]): StationInfo[] => {
+  const transformReservoirData = (
+    apiReservoirs: ReservoirRead[]
+  ): StationInfo[] => {
     return apiReservoirs
-      .filter(reservoir => reservoir.reservoir_name) // Only include reservoirs with valid names
-      .map(reservoir => ({
+      .filter((reservoir) => reservoir.reservoir_name) // Only include reservoirs with valid names
+      .map((reservoir) => ({
         id: reservoir.reservoir_id,
         name: reservoir.reservoir_name,
-        details: `River: ${reservoir.river || "N/A"}, Province: ${reservoir.province || "N/A"}${reservoir.elevation ? `, Alt: ${reservoir.elevation}m` : ""}`,
+        details: `River: ${reservoir.river || "N/A"}, Province: ${
+          reservoir.province || "N/A"
+        }${reservoir.elevation ? `, Alt: ${reservoir.elevation}m` : ""}`,
         lat: 20.8 + (reservoir.reservoir_id % 100) * 0.05, // Mock coordinates based on ID
         lng: 105.3 + (reservoir.reservoir_id % 100) * 0.05, // Mock coordinates based on ID
       }));
   };
 
   // Transform reservoir operations to chart data
-  const transformOperationsData = (operations: ReservoirOperationRead[]): LevelData[] => {
+  const transformOperationsData = (
+    operations: ReservoirOperationRead[]
+  ): LevelData[] => {
     // Group operations by time periods and create chart data
-    const waterLevelData: ChartData[] = operations.slice(0, 7).map((operation, index) => ({
-      label: `Ngày ${index + 1}`,
-      value: operation.water_level || 0,
-    }));
+    const waterLevelData: ChartData[] = operations
+      .slice(0, 7)
+      .map((operation, index) => ({
+        label: `Ngày ${index + 1}`,
+        value: operation.water_level || 0,
+      }));
 
-    const dischargeData: ChartData[] = operations.slice(0, 7).map((operation, index) => ({
-      label: `Ngày ${index + 1}`,
-      value: operation.total_discharge || 0,
-    }));
+    const dischargeData: ChartData[] = operations
+      .slice(0, 7)
+      .map((operation, index) => ({
+        label: `Ngày ${index + 1}`,
+        value: operation.total_discharge || 0,
+      }));
 
     return [
       {
@@ -104,12 +117,10 @@ export function LevelPage() {
         const transformedReservoirs = transformReservoirData(response.data);
         setStations(transformedReservoirs);
         setError(null);
-      }
-      catch (err) {
+      } catch (err) {
         setError("Không thể tải dữ liệu hồ chứa. Vui lòng thử lại sau.");
         console.error("Error fetching reservoirs:", err);
-      }
-      finally {
+      } finally {
         setLoading(false);
       }
     };
@@ -144,22 +155,25 @@ export function LevelPage() {
 
             const marks = {} as any;
             for (const record of response.data) {
-              marks[new Date(record.timestamp).getHours()] = `${new Date(record.timestamp).getHours()}:00`;
+              marks[new Date(record.timestamp).getHours()] = `${new Date(
+                record.timestamp
+              ).getHours()}:00`;
             }
             setSliderMarks(marks);
 
             operationsMap.set(station.id, response.data);
-          }
-          catch (err) {
-            console.error(`Error fetching operations for reservoir ${station.id}:`, err);
+          } catch (err) {
+            console.error(
+              `Error fetching operations for reservoir ${station.id}:`,
+              err
+            );
             operationsMap.set(station.id, []);
           }
         });
 
         await Promise.all(operationsPromises);
         setReservoirOperations(operationsMap);
-      }
-      catch (err) {
+      } catch (err) {
         console.error("Error fetching reservoir operations:", err);
         setReservoirOperations(new Map());
       }
@@ -189,8 +203,7 @@ export function LevelPage() {
 
         const transformedData = transformOperationsData(response.data);
         setLevelData(transformedData);
-      }
-      catch (err) {
+      } catch (err) {
         console.error("Error fetching operations data:", err);
         // Fallback to empty data instead of showing error to user
         setLevelData([]);
@@ -225,7 +238,7 @@ export function LevelPage() {
   const createLevelIcon = (waterLevel: number = 0) => {
     const color = getWaterLevelColor(waterLevel);
     const iconHtml = ReactDOMServer.renderToString(
-      <Icon path={mdiWaterOutline} size={1} color="blue" />,
+      <Icon path={mdiWaterOutline} size={1} color="blue" />
     );
 
     // Format water level value for display
@@ -287,8 +300,18 @@ export function LevelPage() {
       {ReactDOM.createPortal(
         <div
           className={`
-            absolute bottom-4 right-4 z-10
-            ${selectedStation ? "translate-x-0" : "translate-x-full"}
+            absolute z-20 transition-transform duration-300 ease-in-out
+            
+            bottom-[5.5rem] 
+            left-2 right-2 rounded-2xl 
+            
+            md:bottom-4 md:right-4 md:left-auto md:w-[450px]
+            
+            ${
+              selectedStation
+                ? "translate-y-0 md:translate-x-0"
+                : "translate-y-[150%] md:translate-y-0 md:translate-x-[110%]"
+            }
           `}
         >
           <StationInfoPanel
@@ -297,7 +320,7 @@ export function LevelPage() {
             onClose={handlePanelClose}
           />
         </div>,
-        document.body,
+        document.body
       )}
     </>
   );
