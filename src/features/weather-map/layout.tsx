@@ -6,16 +6,15 @@ import { StormSelector } from "./components/storm-selector";
 import { TimelineControl } from "./components/timeline-control";
 import { WeatherSidebar } from "./components/weather-sidebar";
 import { useWeatherMapStore } from "./store";
+import Icon from "@mdi/react";
+import { mdiMenu } from "@mdi/js";
 
 function WeatherMapLayoutContent() {
-  const {
-    selectedStation,
-    mapCenter,
-    mapZoom,
-  } = useWeatherMapStore();
+  const { selectedStation, mapCenter, mapZoom, setIsMobileSidebarOpen } =
+    useWeatherMapStore();
 
   return (
-    <div className="h-screen w-screen relative">
+    <div className="h-screen w-screen relative overflow-hidden">
       <div className="absolute inset-0 z-0">
         <MapContainer
           center={mapCenter}
@@ -27,12 +26,24 @@ function WeatherMapLayoutContent() {
           <Outlet />
         </MapContainer>
       </div>
+      <div className="absolute top-4 left-4 z-20 md:hidden">
+        <button
+          onClick={() => setIsMobileSidebarOpen(true)}
+          className="w-12 h-12 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-full shadow-md"
+        >
+          <Icon path={mdiMenu} size={1.2} className="text-black" />
+        </button>
+      </div>
 
-      <div className="absolute top-6 left-6 pointer-events-auto">
+      <div
+        className="absolute top-4 left-[4.5rem] right-4    
+                     md:w-auto md:top-6 md:left-6 md:right-auto 
+                     pointer-events-auto"
+      >
         <SearchInput />
       </div>
 
-      <div className="absolute top-[95px] left-6 pointer-events-auto">
+      <div className="pointer-events-auto">
         <WeatherSidebar />
       </div>
 
