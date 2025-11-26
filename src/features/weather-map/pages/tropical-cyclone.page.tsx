@@ -17,7 +17,7 @@ interface CyclonePoint extends StormLifecycleRead {
 
 function createCycloneIcon(status: "past" | "forecast") {
   const iconHtml = ReactDOMServer.renderToString(
-    <Icon path={mdiWeatherHurricaneOutline} size={1} color="white" />,
+    <Icon path={mdiWeatherHurricaneOutline} size={1} color="white" />
   );
   const backgroundColor = status === "forecast" ? "#FF2D55D0" : "#757474D0";
 
@@ -44,7 +44,18 @@ function createCycloneIcon(status: "past" | "forecast") {
 export function TropicalCyclonePage() {
   const [cycloneData, setCycloneData] = useState<CyclonePoint[]>([]);
   const [loading, setLoading] = useState(true);
-  const { selectedDate, setSelectedDate, selectedHour, setSliderMarks, selectedStormId, setSelectedStormId, setIsStormSelectorOpen } = useWeatherMapStore();
+
+  const {
+    selectedDate,
+    setSelectedDate,
+    selectedHour,
+    setSliderMarks,
+    selectedStormId,
+    setSelectedStormId,
+    setIsStormSelectorOpen,
+    setMapCenter,
+  } = useWeatherMapStore();
+
   const [data, setData] = useState<StormLifecycleRead[]>([]);
 
   useEffect(() => {
@@ -66,12 +77,16 @@ export function TropicalCyclonePage() {
         storm_ids: [selectedStormId || 0],
       });
 
-      const data = stormLifecycles.data.sort((a, b) => {
-        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-      }).map((u) => {
-        u.timestamp = `${u.timestamp}Z`;
-        return u;
-      });
+      const data = stormLifecycles.data
+        .sort((a, b) => {
+          return (
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          );
+        })
+        .map((u) => {
+          u.timestamp = `${u.timestamp}Z`;
+          return u;
+        });
 
       if (data.length === 0) {
         setSelectedDate(new Date());
@@ -80,18 +95,18 @@ export function TropicalCyclonePage() {
       }
 
       const startDate = new Date(data[0].timestamp);
-      startDate.setDate(startDate.getDate() - 0);
 
       setSelectedDate(startDate || new Date());
+
+      setMapCenter([data[0].latitude, data[0].longitude]);
 
       setData(data);
     };
     fetchCycloneData();
-  }, [selectedStormId, setSelectedDate]);
+  }, [selectedStormId, setSelectedDate, setMapCenter]);
 
   useEffect(() => {
-    if (data.length === 0)
-      return;
+    if (data.length === 0) return;
 
     // const maxDate = dayjs(data[data.length - 1].timestamp);
     // const minDate = dayjs(data[0].timestamp);
@@ -100,47 +115,51 @@ export function TropicalCyclonePage() {
     //   return;
     // }
 
-    const sliderMarks = data.filter((item: StormLifecycleRead) => {
-      return dayjs(item.timestamp).isSame(selectedDate, "day");
-    }).reduce((marks: Record<number, string>, item: StormLifecycleRead) => {
-      const hours = dayjs(item.timestamp).hour();
-      marks[hours] = `${hours}:00`;
-      return marks;
-    }, {});
+    const sliderMarks = data
+      .filter((item: StormLifecycleRead) => {
+        return dayjs(item.timestamp).isSame(selectedDate, "day");
+      })
+      .reduce((marks: Record<number, string>, item: StormLifecycleRead) => {
+        const hours = dayjs(item.timestamp).hour();
+        marks[hours] = `${hours}:00`;
+        return marks;
+      }, {});
 
     setSliderMarks(sliderMarks);
 
-    // Determine the reference time based on selectedDate and selectedHour
     let referenceTime: Date;
     if (selectedDate) {
       referenceTime = new Date(selectedDate);
       referenceTime.setHours(selectedHour, 0, 0, 0);
-    }
-    else {
+    } else {
       referenceTime = new Date();
     }
 
     // Transform data and determine status
-    const transformedData: CyclonePoint[] = data.map((item: StormLifecycleRead, index: number) => {
-      const timestamp = new Date(item.timestamp);
-      const isForecast = timestamp > referenceTime;
+    const transformedData: CyclonePoint[] = data.map(
+      (item: StormLifecycleRead, index: number) => {
+        const timestamp = new Date(item.timestamp);
+        const isForecast = timestamp > referenceTime;
 
-      // Calculate radius for forecast points with increment
-      let radius = 0;
-      if (isForecast) {
-        // Base radius of 50km, increasing by 20km for each subsequent forecast point
-        const forecastIndex = data.slice(0, index + 1).filter((d: StormLifecycleRead) =>
-          new Date(d.timestamp) > referenceTime,
-        ).length;
-        radius = 8000 + 20000 * Math.log(forecastIndex + 1);
+        // Calculate radius for forecast points with increment
+        let radius = 0;
+        if (isForecast) {
+          // Base radius of 50km, increasing by 20km for each subsequent forecast point
+          const forecastIndex = data
+            .slice(0, index + 1)
+            .filter(
+              (d: StormLifecycleRead) => new Date(d.timestamp) > referenceTime
+            ).length;
+          radius = 8000 + 20000 * Math.log(forecastIndex + 1);
+        }
+
+        return {
+          ...item,
+          status: isForecast ? "forecast" : "past",
+          radius,
+        };
       }
-
-      return {
-        ...item,
-        status: isForecast ? "forecast" : "past",
-        radius,
-      };
-    });
+    );
 
     // Filter data based on selected time frame
     // Show past points up to the reference time and forecast points after
@@ -156,8 +175,7 @@ export function TropicalCyclonePage() {
         // Show past points that are close to the reference time (within a reasonable range)
         // This helps show the cyclone's path leading up to the selected time
         return itemTime <= referenceTime;
-      }
-      else {
+      } else {
         // Show forecast points after the reference time
         return itemTime > referenceTime;
       }
@@ -171,10 +189,10 @@ export function TropicalCyclonePage() {
   }
 
   const allPositions = cycloneData.map(
-    p => [p.latitude, p.longitude] as [number, number],
+    (p) => [p.latitude, p.longitude] as [number, number]
   );
   const forecastStartIndex = cycloneData.findIndex(
-    p => p.status === "forecast",
+    (p) => p.status === "forecast"
   );
 
   // Xử lý trường hợp selectedDate nằm ngoài khoảng dữ liệu
@@ -184,12 +202,10 @@ export function TropicalCyclonePage() {
   if (forecastStartIndex === -1) {
     // Tất cả là past (selectedDate sau tất cả các điểm)
     pastPath = allPositions;
-  }
-  else if (forecastStartIndex === 0) {
+  } else if (forecastStartIndex === 0) {
     // Tất cả là forecast (selectedDate trước tất cả các điểm)
     forecastPath = allPositions;
-  }
-  else {
+  } else {
     // Trường hợp bình thường: có cả past và forecast
     pastPath = allPositions.slice(0, forecastStartIndex + 1);
     forecastPath = allPositions.slice(forecastStartIndex);
@@ -222,7 +238,6 @@ export function TropicalCyclonePage() {
                 fillOpacity: 0.4,
                 fillRule: "evenodd",
               }}
-
             />
           )}
 

@@ -8,6 +8,7 @@ import { WeatherSidebar } from "./components/weather-sidebar";
 import { useWeatherMapStore } from "./store";
 import Icon from "@mdi/react";
 import { mdiMenu } from "@mdi/js";
+import { MapUpdater } from "./components/map-updater";
 
 function WeatherMapLayoutContent() {
   const { selectedStation, mapCenter, mapZoom, setIsMobileSidebarOpen } =
@@ -23,6 +24,7 @@ function WeatherMapLayoutContent() {
           zoomControl={false}
         >
           <MapCanvas />
+          <MapUpdater />
           <Outlet />
         </MapContainer>
       </div>
